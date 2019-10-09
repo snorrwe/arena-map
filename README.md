@@ -1,3 +1,5 @@
+# Some toy map tweaks
+
 |     Group      |   Experiment    |   Prob. Space   |     Samples     |   Iterations    |    Baseline     |  us/Iteration   | Iterations/sec  |
 |:--------------:|:---------------:|:---------------:|:---------------:|:---------------:|:---------------:|:---------------:|:---------------:|
 |Init            | NaiveMap        |             256 |              30 |            2048 |         1.00000 |       157.41650 |         6352.57 |
