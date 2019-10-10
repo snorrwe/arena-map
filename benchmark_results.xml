@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<tests>
+<testsuite errors="0" tests="18" time="0.912634" failures="0" name="Find">
+	<testcase time="0.008523" name="NaiveMap#32"/>
+	<testcase time="0.001155" name="NaiveMap#256"/>
+	<testcase time="0.002998" name="NaiveMap#400"/>
+	<testcase time="0.004629" name="NaiveMap#512"/>
+	<testcase time="0.012583" name="NaiveMap#1024"/>
+	<testcase time="0.033689" name="NaiveMap#2048"/>
+	<testcase time="0.009967" name="Arena#32"/>
+	<testcase time="0.007594" name="Arena#256"/>
+	<testcase time="0.018359" name="Arena#400"/>
+	<testcase time="0.029572" name="Arena#512"/>
+	<testcase time="0.116274" name="Arena#1024"/>
+	<testcase time="0.461799" name="Arena#2048"/>
+	<testcase time="0.007732" name="ArenaSorted#32"/>
+	<testcase time="0.004059" name="ArenaSorted#256"/>
+	<testcase time="0.012178" name="ArenaSorted#400"/>
+	<testcase time="0.018337" name="ArenaSorted#512"/>
+	<testcase time="0.049296" name="ArenaSorted#1024"/>
+	<testcase time="0.11389" name="ArenaSorted#2048"/>
+</testsuite>
+<testsuite errors="0" tests="12" time="1.9703" failures="0" name="Init">
+	<testcase time="0.378309" name="NaiveMap#32"/>
+	<testcase time="0.049001" name="NaiveMap#256"/>
+	<testcase time="0.077655" name="NaiveMap#400"/>
+	<testcase time="0.102031" name="NaiveMap#512"/>
+	<testcase time="0.202298" name="NaiveMap#1024"/>
+	<testcase time="0.410291" name="NaiveMap#2048"/>
+	<testcase time="0.245326" name="Arena#32"/>
+	<testcase time="0.030473" name="Arena#256"/>
+	<testcase time="0.047129" name="Arena#400"/>
+	<testcase time="0.061068" name="Arena#512"/>
+	<testcase time="0.122786" name="Arena#1024"/>
+	<testcase time="0.243938" name="Arena#2048"/>
+</testsuite>
+<testsuite errors="0" tests="18" time="1.41882" failures="0" name="InsertAndFind">
+	<testcase time="0.196542" name="NaiveMap#32"/>
+	<testcase time="0.01322" name="NaiveMap#256"/>
+	<testcase time="0.02087" name="NaiveMap#400"/>
+	<testcase time="0.027083" name="NaiveMap#512"/>
+	<testcase time="0.05351" name="NaiveMap#1024"/>
+	<testcase time="0.109546" name="NaiveMap#2048"/>
+	<testcase time="0.265894" name="Arena#32"/>
+	<testcase time="0.009836" name="Arena#256"/>
+	<testcase time="0.017026" name="Arena#400"/>
+	<testcase time="0.023312" name="Arena#512"/>
+	<testcase time="0.061588" name="Arena#1024"/>
+	<testcase time="0.181977" name="Arena#2048"/>
+	<testcase time="0.282103" name="ArenaSorting#32"/>
+	<testcase time="0.0092" name="ArenaSorting#256"/>
+	<testcase time="0.014469" name="ArenaSorting#400"/>
+	<testcase time="0.018667" name="ArenaSorting#512"/>
+	<testcase time="0.037933" name="ArenaSorting#1024"/>
+	<testcase time="0.076042" name="ArenaSorting#2048"/>
+</testsuite>
+</tests>
