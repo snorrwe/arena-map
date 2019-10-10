@@ -2,25 +2,25 @@
 #include <cassert>
 #include <memory>
 
-/// Allocator that allocates memory once via malloc and frees all memory on destruction
+/// Allocator that allocates memory once via malloc and frees all memory on
+/// destruction
 class ArenaAllocator final {
     char* _start;
     char* _end;
     char* _next;
 
 public:
+    ArenaAllocator(ArenaAllocator const&) = delete;
+    ArenaAllocator& operator=(ArenaAllocator const&) = delete;
+
     ArenaAllocator(size_t capacity) noexcept
-        : _start((char*)malloc(capacity))
+        : _start(new char[capacity])
         , _end(_start + capacity)
         , _next(_start)
     {
     }
 
-    ~ArenaAllocator()
-    {
-        if (_start != nullptr)
-            free(_start);
-    }
+    ~ArenaAllocator() { delete[] _start; }
 
     ArenaAllocator(ArenaAllocator&& a) noexcept
         : _start(a._start)
@@ -48,10 +48,11 @@ public:
     template <typename T>
     T* allocate(const size_t n)
     {
-        auto* ptr = (T*)_next;
-        _next += sizeof(T) * n;
-        if (_next > _end)
+        const size_t delta = sizeof(T) * n;
+        if (_next + delta > _end)
             throw std::bad_alloc {};
+        auto* ptr = (T*)_next;
+        _next += delta;
         return ptr;
     }
 
@@ -70,9 +71,6 @@ public:
     {
         return _start != other._start;
     }
-
-    ArenaAllocator(ArenaAllocator const&) = delete;
-    ArenaAllocator& operator=(ArenaAllocator const&) = delete;
 };
 
 /// Typed Arena Allocator to be used in container templates
@@ -104,12 +102,12 @@ public:
         // nope
     }
 
-    bool operator==(ArenaAllocator const& other) const noexcept
+    bool operator==(TypedArena<T> const& other) const noexcept
     {
         return _arena == other._arena;
     }
 
-    bool operator!=(ArenaAllocator const& other) const noexcept
+    bool operator!=(TypedArena<T> const& other) const noexcept
     {
         return !(*this == other);
     }
