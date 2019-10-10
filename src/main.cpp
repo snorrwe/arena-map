@@ -22,6 +22,7 @@ std::vector<celero::TestFixture::ExperimentValue> problemSpace {
     1 << 9,
     1 << 10,
     1 << 11,
+    1 << 12
 };
 
 struct DbFixture : public celero::TestFixture {
