@@ -13,7 +13,7 @@ public:
     ArenaAllocator(ArenaAllocator const&) = delete;
     ArenaAllocator& operator=(ArenaAllocator const&) = delete;
 
-    ArenaAllocator(size_t capacity) noexcept
+    explicit ArenaAllocator(size_t capacity) noexcept
         : _start(new char[capacity])
         , _end(_start + capacity)
         , _next(_start)
@@ -76,23 +76,34 @@ public:
 /// Typed Arena Allocator to be used in container templates
 /// Takes an ArenaAllocator as a backend
 template <typename T>
-class TypedArena {
+class TypedArena final {
+    ArenaAllocator* _arena;
+
 public:
-    using Self = ArenaAllocator;
     using pointer = T*;
     using const_pointer = T const*;
     using void_pointer = void*;
     using const_void_pointer = void const*;
     using value_type = T;
 
-    TypedArena(ArenaAllocator& arena)
-        : _arena(arena)
+    explicit TypedArena(ArenaAllocator& arena)
+        : _arena(&arena)
     {
     }
 
+    TypedArena() = delete;
+
+    TypedArena(TypedArena<T> const&) = default;
+    TypedArena& operator=(TypedArena<T> const&) = default;
+    TypedArena(TypedArena<T>&&) = default;
+    TypedArena& operator=(TypedArena<T>&&) = default;
+    ~TypedArena() = default;
+
     T* allocate(const size_t n)
     {
-        auto* ptr = _arena.allocate<T>(n);
+        T* ptr = nullptr;
+        if (_arena)
+            ptr = _arena->allocate<T>(n);
         return ptr;
     }
 
@@ -112,7 +123,9 @@ public:
         return !(*this == other);
     }
 
-private:
-    ArenaAllocator& _arena;
+    operator ArenaAllocator&() const
+    {
+        return *_arena;
+    }
 };
 

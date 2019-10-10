@@ -31,53 +31,40 @@ public:
 
 class ArenaDb final {
 public:
-    struct Node {
-        Point point;
+    // TODO: make this a container
+    struct FixedLenVector {
         double* ptr;
-        size_t size;
-        Node(Point point, double* ptr, size_t size)
-            : point(point)
-            , ptr(ptr)
-            , size(size)
+        size_t capacity;
+        size_t size = 0;
+        FixedLenVector(double* ptr, size_t capacity)
+            : ptr(ptr)
+            , capacity(capacity)
         {
         }
-
-        bool operator<(Node const& n) const noexcept { return point < n.point; }
-        bool operator==(Node const& n) const noexcept
-        {
-            return point == n.point;
-        }
-
-        bool operator<(Point const& p) const noexcept { return point < p; }
-        bool operator==(Point const& p) const noexcept { return point == p; }
     };
 
     ArenaDb(size_t key_capacity = 500, size_t value_capacity = 30)
-        : allocator(key_capacity * value_capacity * sizeof(double) + key_capacity * sizeof(Node))
-        , value_capacity(value_capacity)
+        : value_capacity(value_capacity)
+        , allocator(2*key_capacity * value_capacity * sizeof(double) + key_capacity * sizeof(FixedLenVector))
 
     {
-        _points.reserve(key_capacity);
     }
 
-    Node const* get(Point const p) const noexcept
+    FixedLenVector const* get(Point const p) const noexcept
     {
-
-        auto it = std::lower_bound(_points.begin(), _points.end(), p);
-        if (it == _points.end() || it->point != p)
+        auto it = _points.find(p);
+        if (it == _points.end())
             return nullptr;
-        return &*it;
+        return &it->second;
     }
 
-    Node& insert(Point const p)
+    FixedLenVector* insert(Point const p)
     {
-        auto it = std::lower_bound(_points.begin(), _points.end(), p);
-        if (it != _points.end() && it->point == p) {
-            return *it;
-        }
         double* ptr = (double*)allocator.allocate<double>(value_capacity);
-        _points.emplace(it, p, ptr, value_capacity);
-        return _points.back();
+        auto result = _points.insert(std::make_pair(p, FixedLenVector { ptr, value_capacity }));
+        if (!result.second)
+            return nullptr;
+        return &result.first->second;
     }
 
     void clear()
@@ -87,8 +74,12 @@ public:
     }
 
 private:
-    ArenaAllocator allocator;
-    std::vector<Node, TypedArena<Node>> _points { TypedArena<Node> { allocator } };
+    using TAllocator = TypedArena<std::pair<const Point, FixedLenVector>>;
+
     size_t value_capacity;
+    ArenaAllocator allocator;
+    std::map<Point, FixedLenVector, std::less<Point>,
+        TAllocator>
+        _points { TAllocator { allocator } };
 };
 

@@ -9,6 +9,7 @@
 #include <cstdlib>
 #endif
 
+#include "point.hpp"
 #include "arena.hpp"
 #include "db.hpp"
 
@@ -34,7 +35,7 @@ struct DbFixture : public celero::TestFixture {
         return problemSpace;
     }
 
-    virtual void setUp(
+    virtual void setUp (
         const celero::TestFixture::ExperimentValue& experimentValue) override
     {
         num_keys = experimentValue.Value;
@@ -68,9 +69,9 @@ BENCHMARK_F(Init, Arena, ArenaFixture, 0, 256)
 
     for (int i = 0; i < num_keys; ++i) {
         auto p = Point { rand(), rand() };
-        auto& data = db.insert(p);
+        auto* data = db.insert(p);
         for (int j = 0; j < num_values; ++j) {
-            data.ptr[j] = rand();
+            data->ptr[j] = rand();
         }
     }
     celero::DoNotOptimizeAway(db);
@@ -144,9 +145,9 @@ struct ArenaMapFindFixture : public celero::TestFixture {
         for (int i = 0; i < num_keys; ++i) {
             auto p = Point { rand(), rand() };
             keys.emplace_back(p);
-            auto& data = db->insert(p);
+            auto* data = db->insert(p);
             for (int j = 0; j < num_values; ++j) {
-                data.ptr[j] = rand();
+                data->ptr[j] = rand();
             }
         }
     }
