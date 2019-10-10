@@ -155,7 +155,7 @@ BENCHMARK_F(Find, Arena, ArenaMapFindFixture, 0, 256)
     }
 }
 
-BENCHMARK_F(Find, ArenaSorted, ArenaMapFindFixture, 0, 256)
+BENCHMARK_F(Find, ArenaSorted, ArenaMapFindFixture, 0, 1024)
 {
     db->sort();
     for (auto const& k : keys)
@@ -193,6 +193,36 @@ BASELINE_F(InsertAndFind, NaiveMap, DbFixture, 0, 64)
         celero::DoNotOptimizeAway(v);
     }
 
+    celero::DoNotOptimizeAway(db);
+}
+
+BENCHMARK_F(InsertAndFind, Arena, DbFixture, 0, 64)
+{
+    ArenaDb db {num_keys};
+
+    auto const insert = [&]() {
+        const auto p = Point {rand(), rand()};
+        auto* v = db.insert(p);
+        for (int j = 0; j < num_values; ++j)
+        {
+            v->push_back(rand());
+        }
+        return p;
+    };
+
+    std::vector<Point> keys;
+    for (int i = 0; i + 1 < num_keys; ++i)
+    {
+        auto key = insert();
+        keys.emplace_back(key);
+    }
+    for (auto& k : keys)
+    {
+        auto* v = db.get(k);
+        celero::DoNotOptimizeAway(v);
+    }
+
+    celero::DoNotOptimizeAway(keys);
     celero::DoNotOptimizeAway(db);
 }
 
