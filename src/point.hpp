@@ -8,6 +8,11 @@ struct Point {
         return x < p.x || (x == p.x && y < p.y);
     }
 
+    bool operator<=(Point const& p) const noexcept
+    {
+        return x <= p.x || (x == p.x && y <= p.y);
+    }
+
     bool operator==(Point const& p) const noexcept
     {
         return x == p.x && y == p.y;
@@ -15,7 +20,7 @@ struct Point {
 
     bool operator!=(Point const& p) const noexcept
     {
-        return x != p.x || y != p.y;
+        return !(*this == p);
     }
 };
 

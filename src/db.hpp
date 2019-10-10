@@ -3,9 +3,11 @@
 #include "point.hpp"
 #include <algorithm>
 #include <map>
+#include <numeric>
 #include <vector>
 
-class NaiveDb final {
+class NaiveDb final
+{
     std::map<Point, std::vector<double>> data;
 
 public:
@@ -15,7 +17,8 @@ public:
     std::vector<double> const* get(Point p) const noexcept
     {
         auto it = data.find(p);
-        if (it != data.end()) {
+        if (it != data.end())
+        {
             return &it->second;
         }
         return nullptr;
@@ -26,60 +29,234 @@ public:
         data.insert(std::make_pair(key, std::move(value)));
     }
 
-    void clear() { data.clear(); }
+    void clear()
+    {
+        data.clear();
+    }
 };
 
-class ArenaDb final {
+/// Vector with a fix capacity
+/// Ctor takes a pointer to a buffer of size capacity
+/// !!Important!! this object does not manage memory.
+/// Be sure not to leak the buffer passed to the vector!
+template <typename T> class FixedLenView final
+{
+    T* ptr;
+    size_t capacity;
+    size_t _size = 0;
+
 public:
-    // TODO: make this a container
-    struct FixedLenVector {
-        double* ptr;
-        size_t capacity;
-        size_t size = 0;
-        FixedLenVector(double* ptr, size_t capacity)
-            : ptr(ptr)
-            , capacity(capacity)
+    FixedLenView(T* ptr, size_t capacity) : ptr(ptr), capacity(capacity)
+    {
+    }
+
+    FixedLenView(FixedLenView&& v) : ptr(v.ptr), capacity(v.capacity), _size(v._size)
+    {
+        v.ptr = nullptr;
+        v.capacity = 0;
+        v._size = 0;
+    }
+
+    FixedLenView& operator=(FixedLenView&& v)
+    {
+        ptr = v.ptr;
+        capacity = v.capacity;
+        _size = v._size;
+        v.ptr = nullptr;
+        v.capacity = 0;
+        v._size = 0;
+        return *this;
+    }
+
+    ~FixedLenView()
+    {
+        for (size_t i = 0; i < _size; ++i)
+            ptr[i].~T();
+    }
+
+    T const& at(size_t const index) const
+    {
+        assert(index < _size);
+        return ptr[index];
+    }
+
+    T& at(size_t const index)
+    {
+        assert(index < _size);
+        return ptr[index];
+    }
+
+    T const& operator[](size_t const index) const
+    {
+        return at(index);
+    }
+
+    T& operator[](size_t const index)
+    {
+        return at(index);
+    }
+
+    T& push_back(T item)
+    {
+        assert(_size < capacity);
+        ptr[_size] = std::move(item);
+        ++_size;
+        return ptr[_size - 1];
+    }
+
+    T& insert(size_t index, T item)
+    {
+        assert(_size < capacity);
+        assert(index <= _size);
+        for (size_t i = _size; i > index; --i)
         {
+            std::swap(ptr[i], ptr[i - 1]);
         }
-    };
-
-    ArenaDb(size_t key_capacity = 500, size_t value_capacity = 30)
-        : value_capacity(value_capacity)
-        , allocator(2*key_capacity * value_capacity * sizeof(double) + key_capacity * sizeof(FixedLenVector))
-
-    {
-    }
-
-    FixedLenVector const* get(Point const p) const noexcept
-    {
-        auto it = _points.find(p);
-        if (it == _points.end())
-            return nullptr;
-        return &it->second;
-    }
-
-    FixedLenVector* insert(Point const p)
-    {
-        double* ptr = (double*)allocator.allocate<double>(value_capacity);
-        auto result = _points.insert(std::make_pair(p, FixedLenVector { ptr, value_capacity }));
-        if (!result.second)
-            return nullptr;
-        return &result.first->second;
+        ptr[index] = std::move(item);
+        ++_size;
+        return ptr[_size - 1];
     }
 
     void clear()
     {
-        allocator.clear();
-        _points.clear();
+        _size = 0;
+    }
+
+    T* begin()
+    {
+        return ptr;
+    }
+
+    T* end()
+    {
+        return ptr + _size;
+    }
+    T const* begin() const
+    {
+        return ptr;
+    }
+
+    T const* end() const
+    {
+        return ptr + _size;
+    }
+
+    T& back()
+    {
+        return ptr[_size - 1];
+    }
+
+    T const& back() const
+    {
+        return ptr[_size - 1];
+    }
+
+    size_t size() const
+    {
+        return _size;
+    }
+};
+
+class ArenaDb final
+{
+public:
+    using VecValues = FixedLenView<double>;
+    using VecKeys = FixedLenView<Point>;
+
+    explicit ArenaDb() = delete;
+    explicit ArenaDb(size_t key_capacity, size_t value_capacity = 30)
+        : value_capacity {value_capacity}
+        , allocator {key_capacity * value_capacity * sizeof(double)
+                     + key_capacity * (sizeof(VecValues) + sizeof(VecKeys))}
+        , keys {allocator.allocate<Point>(key_capacity), key_capacity}
+        , values {allocator.allocate<VecValues>(key_capacity), key_capacity}
+    {
+    }
+
+    VecValues const* get(Point const p) const noexcept
+    {
+        size_t const ind = find(p);
+        if (ind == size)
+            return nullptr;
+        return &values.at(ind);
+    }
+
+    // Inserting the same key twice is UB!
+    VecValues* insert(Point const p)
+    {
+        keys.push_back(p);
+        values.push_back(VecValues {allocator.allocate<double>(value_capacity), value_capacity});
+        ++size;
+
+        return &values.back();
+    }
+
+    void clear()
+    {
+        keys.clear();
+        values.clear();
+    }
+
+    void sort()
+    {
+        if (sorted == size)
+            return;
+        sort_impl(0, size);
+        sorted = size;
     }
 
 private:
-    using TAllocator = TypedArena<std::pair<const Point, FixedLenVector>>;
+    size_t find(Point const p) const noexcept
+    {
+        auto const* const begin = keys.begin();
+        auto const* end = begin + sorted;
+        auto const* it = std::lower_bound(begin, end, p);
+        if (it == end || *it != p)
+        {
+            end = keys.end();
+            it = std::find(begin + sorted, end, p);
+        }
+        return it - begin;
+    }
 
+    // quicksort
+    void sort_impl(size_t begin, size_t end)
+    {
+        if (begin == end)
+            return;
+        size_t pivot = partition(begin, end);
+        sort_impl(begin, pivot);
+        // skip the pivot
+        sort_impl(pivot + 1, end);
+    }
+
+    size_t partition(size_t begin, size_t end)
+    {
+        using std::swap;
+        --end;
+        size_t pivot = end;
+        size_t i = begin;
+
+        for (size_t j = begin; j != end; ++j)
+        {
+            if (keys.at(j) < keys.at(pivot))
+            {
+                swap(keys.at(i), keys.at(j));
+                swap(values.at(i), values.at(j));
+                ++i;
+            }
+        }
+        swap(keys.at(i), keys.at(pivot));
+        swap(values.at(i), values.at(pivot));
+        return i;
+    }
+
+    size_t sorted = 0;
+    size_t size = 0;
     size_t value_capacity;
     ArenaAllocator allocator;
-    std::map<Point, FixedLenVector, std::less<Point>,
-        TAllocator>
-        _points { TAllocator { allocator } };
+
+    VecKeys keys;
+    FixedLenView<VecValues> values;
 };
 

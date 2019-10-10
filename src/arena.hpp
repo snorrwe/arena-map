@@ -4,7 +4,8 @@
 
 /// Allocator that allocates memory once via malloc and frees all memory on
 /// destruction
-class ArenaAllocator final {
+class ArenaAllocator final
+{
     char* _start;
     char* _end;
     char* _next;
@@ -13,19 +14,17 @@ public:
     ArenaAllocator(ArenaAllocator const&) = delete;
     ArenaAllocator& operator=(ArenaAllocator const&) = delete;
 
-    explicit ArenaAllocator(size_t capacity) noexcept
-        : _start(new char[capacity])
-        , _end(_start + capacity)
-        , _next(_start)
+    explicit ArenaAllocator(size_t capacity)
+        : _start(new char[capacity]), _end(_start + capacity), _next(_start)
     {
     }
 
-    ~ArenaAllocator() { delete[] _start; }
+    ~ArenaAllocator()
+    {
+        delete[] _start;
+    }
 
-    ArenaAllocator(ArenaAllocator&& a) noexcept
-        : _start(a._start)
-        , _end(a._end)
-        , _next(a._next)
+    ArenaAllocator(ArenaAllocator&& a) noexcept : _start(a._start), _end(a._end), _next(a._next)
     {
         a._start = nullptr;
         a._end = nullptr;
@@ -45,13 +44,12 @@ public:
 
     /// Allocate space for n items of type T
     /// Throw std::bad_alloc if the Allocator is out of memory
-    template <typename T>
-    T* allocate(const size_t n)
+    template <typename T> T* allocate(const size_t n)
     {
         const size_t delta = sizeof(T) * n;
         if (_next + delta > _end)
             throw std::bad_alloc {};
-        auto* ptr = (T*)_next;
+        T* ptr = (T*)_next;
         _next += delta;
         return ptr;
     }
@@ -60,7 +58,10 @@ public:
     /// Note that this does not free any memory, but new items will override the
     /// old ones! Using any pointer obtained before clearing is undefined
     /// behaviour
-    void clear() noexcept { _next = _start; }
+    void clear() noexcept
+    {
+        _next = _start;
+    }
 
     bool operator==(ArenaAllocator const& other) const noexcept
     {
@@ -75,8 +76,8 @@ public:
 
 /// Typed Arena Allocator to be used in container templates
 /// Takes an ArenaAllocator as a backend
-template <typename T>
-class TypedArena final {
+template <typename T> class TypedArena final
+{
     ArenaAllocator* _arena;
 
 public:
@@ -86,8 +87,7 @@ public:
     using const_void_pointer = void const*;
     using value_type = T;
 
-    explicit TypedArena(ArenaAllocator& arena)
-        : _arena(&arena)
+    explicit TypedArena(ArenaAllocator& arena) : _arena(&arena)
     {
     }
 

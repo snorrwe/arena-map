@@ -1,25 +1,7 @@
 ﻿{
   "configurations": [
     {
-      "name": "x64-Debug",
-      "generator": "Ninja",
-      "configurationType": "RelWithDebInfo",
-      "inheritEnvironments": [ "msvc_x64_x64" ],
-      "buildRoot": "${projectDir}\\build",
-      "installRoot": "${projectDir}\\out\\install\\${name}",
-      "cmakeCommandArgs": "-DCONAN_DISABLE_CHECK_COMPILER=1",
-      "buildCommandArgs": "-v",
-      "ctestCommandArgs": "",
-      "variables": [
-        {
-          "name": "CMAKE_BUILD_TYPE",
-          "value": "Debug",
-          "type": "STRING"
-        }
-      ]
-    },
-    {
-      "name": "x64-Clang-Release",
+      "name": "x64-Release",
       "generator": "Ninja",
       "configurationType": "RelWithDebInfo",
       "buildRoot": "${projectDir}\\build",
@@ -27,7 +9,7 @@
       "cmakeCommandArgs": "-DCONAN_DISABLE_CHECK_COMPILER=1",
       "buildCommandArgs": "-v",
       "ctestCommandArgs": "",
-      "inheritEnvironments": [ "clang_cl_x64" ],
+        "inheritEnvironments": [ "msvc_x64_x64" ],
       "variables": []
     }
   ]
