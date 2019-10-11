@@ -16,7 +16,7 @@
 CELERO_MAIN
 
 std::vector<celero::TestFixture::ExperimentValue> problemSpace {
-    0, 32, 1 << 8, 400, 1 << 9, 1 << 10, 1 << 11, 1 << 12, 1 << 13
+   32, 1 << 8, 400, 1 << 9, 1 << 10, 1 << 11
 };
 
 struct DbFixture : public celero::TestFixture

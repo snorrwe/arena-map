@@ -212,7 +212,7 @@ public:
     {
         auto* a = this->a++;
         auto* b = this->b++;
-        return JoinIterator {a, b};
+        return JoinIterator{a, b};
     }
 
     std::pair<T1&, T2&> operator*()
@@ -234,22 +234,21 @@ public:
 
     explicit ArenaDb() = delete;
     explicit ArenaDb(size_t key_capacity, size_t value_capacity = 30)
-        : value_capacity {value_capacity}
-        , allocator {key_capacity * value_capacity * sizeof(double)
-                     + key_capacity * (sizeof(VecValues) + sizeof(VecKeys))}
-        , keys {allocator.allocate<Point>(key_capacity), key_capacity}
-        , values {allocator.allocate<VecValues>(key_capacity), key_capacity}
+        : value_capacity{value_capacity}
+        , allocator{}
+        , keys{allocator.allocate<Point>(key_capacity), key_capacity}
+        , values{allocator.allocate<VecValues>(key_capacity), key_capacity}
     {
     }
 
     JoinIterator<Point, VecValues> begin()
     {
-        return JoinIterator<Point, VecValues> {keys.begin(), values.begin()};
+        return JoinIterator<Point, VecValues>{keys.begin(), values.begin()};
     }
 
     JoinIterator<Point, VecValues> end()
     {
-        return JoinIterator<Point, VecValues> {keys.end(), values.end()};
+        return JoinIterator<Point, VecValues>{keys.end(), values.end()};
     }
 
     VecValues const* get(Point const p) const noexcept
@@ -264,7 +263,7 @@ public:
     VecValues* insert(Point const p)
     {
         keys.push_back(p);
-        values.push_back(VecValues {allocator.allocate<double>(value_capacity), value_capacity});
+        values.push_back(VecValues{allocator.allocate<double>(value_capacity), value_capacity});
         ++size;
 
         return &values.back();

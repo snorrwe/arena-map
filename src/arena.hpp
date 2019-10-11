@@ -2,19 +2,23 @@
 #include <cassert>
 #include <memory>
 
-/// Allocator that allocates memory once via malloc and frees all memory on
-/// destruction
+constexpr size_t DEFAULT_PAGE_SIZE = 4096;
+
+/// Allocator that frees all its memory on destruction
 class ArenaAllocator final
 {
     char* _start;
     char* _end;
     char* _next;
 
+    // ArenaAllocator is a linked list
+    std::unique_ptr<ArenaAllocator> _next_arena = nullptr;
+
 public:
     ArenaAllocator(ArenaAllocator const&) = delete;
     ArenaAllocator& operator=(ArenaAllocator const&) = delete;
 
-    explicit ArenaAllocator(size_t capacity)
+    explicit ArenaAllocator(size_t capacity = DEFAULT_PAGE_SIZE)
         : _start(new char[capacity]), _end(_start + capacity), _next(_start)
     {
     }
@@ -42,16 +46,28 @@ public:
         return *this;
     }
 
+    size_t remaining() const noexcept
+    {
+        return _end - _next;
+    }
+
     /// Allocate space for n items of type T
     /// Throw std::bad_alloc if the Allocator is out of memory
     template <typename T> T* allocate(const size_t n)
     {
         const size_t delta = sizeof(T) * n;
-        if (_next + delta > _end)
-            throw std::bad_alloc {};
-        T* ptr = (T*)_next;
-        _next += delta;
-        return ptr;
+        ArenaAllocator* arena = this;
+        do
+        {
+            if (arena->remaining() < delta)
+            {
+                T* ptr = (T*)arena->_next;
+                arena->_next += delta;
+                return ptr;
+            }
+        } while (arena->_next_arena != nullptr && (arena = arena->_next_arena.get()));
+        arena->_next_arena.reset(new ArenaAllocator(_end - _start));
+		return arena->_next_arena->allocate<T>(n);
     }
 
     /// Reset this allocator
