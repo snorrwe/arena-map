@@ -1,6 +1,7 @@
 #pragma once
 
-struct Point {
+struct Point
+{
     int x, y;
 
     bool operator<(Point const& p) const noexcept

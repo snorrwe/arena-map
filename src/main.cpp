@@ -15,8 +15,13 @@
 
 CELERO_MAIN
 
-std::vector<celero::TestFixture::ExperimentValue> problemSpace {
-   32, 1 << 8, 400, 1 << 9, 1 << 10, 1 << 11
+std::vector<celero::TestFixture::ExperimentValue> problemSpace{
+    32,
+    1 << 8,
+    400,
+    1 << 9,
+    1 << 10,
+    1 << 11,
 };
 
 struct DbFixture : public celero::TestFixture
@@ -47,7 +52,7 @@ BASELINE_F(Init, NaiveMap, NaiveMapFixture, 0, 256)
 {
     for (int i = 0; i < num_keys; ++i)
     {
-        auto p = Point {rand(), rand()};
+        auto p = Point{rand(), rand()};
         std::vector<double> v;
         v.reserve(30);
         for (int j = 0; j < num_values; ++j)
@@ -61,11 +66,11 @@ BASELINE_F(Init, NaiveMap, NaiveMapFixture, 0, 256)
 
 BENCHMARK_F(Init, Arena, ArenaFixture, 0, 256)
 {
-    ArenaDb db {num_keys, num_values};
+    ArenaDb db{num_keys, num_values};
 
     for (int i = 0; i < num_keys; ++i)
     {
-        auto p = Point {rand(), rand()};
+        auto p = Point{rand(), rand()};
         auto* data = db.insert(p);
         celero::DoNotOptimizeAway(db);
         for (int j = 0; j < num_values; ++j)
@@ -79,11 +84,11 @@ BENCHMARK_F(Init, Arena, ArenaFixture, 0, 256)
 
 BENCHMARK_F(Init, ArenaSorted, ArenaFixture, 0, 256)
 {
-    ArenaDb db {num_keys, num_values};
+    ArenaDb db{num_keys, num_values};
 
     for (int i = 0; i < num_keys; ++i)
     {
-        auto p = Point {rand(), rand()};
+        auto p = Point{rand(), rand()};
         auto* data = db.insert(p);
         celero::DoNotOptimizeAway(db);
         for (int j = 0; j < num_values; ++j)
@@ -114,7 +119,7 @@ struct NaiveMapFindFixture : public celero::TestFixture
         db.clear();
         for (int i = 0; i < num_keys; ++i)
         {
-            auto p = Point {rand(), rand()};
+            auto p = Point{rand(), rand()};
             std::vector<double> v;
             v.reserve(30);
             for (int j = 0; j < num_values; ++j)
@@ -142,10 +147,10 @@ struct ArenaMapFindFixture : public celero::TestFixture
     virtual void setUp(const celero::TestFixture::ExperimentValue& experimentValue) override
     {
         num_keys = experimentValue.Value;
-        db.reset(new ArenaDb {num_keys, num_values});
+        db.reset(new ArenaDb{num_keys, num_values});
         for (int i = 0; i < num_keys; ++i)
         {
-            auto p = Point {rand(), rand()};
+            auto p = Point{rand(), rand()};
             keys.emplace_back(p);
             auto* data = db->insert(p);
             for (int j = 0; j < num_values; ++j)
@@ -189,7 +194,7 @@ BASELINE_F(InsertAndFind, NaiveMap, DbFixture, 0, 64)
     NaiveDb db;
 
     auto const insert = [&]() {
-        const auto p = Point {rand(), rand()};
+        const auto p = Point{rand(), rand()};
         std::vector<double> v;
         v.reserve(30);
         for (int j = 0; j < num_values; ++j)
@@ -222,10 +227,10 @@ BASELINE_F(InsertAndFind, NaiveMap, DbFixture, 0, 64)
 
 BENCHMARK_F(InsertAndFind, Arena, DbFixture, 0, 64)
 {
-    ArenaDb db {num_keys};
+    ArenaDb db{num_keys};
 
     auto const insert = [&]() {
-        const auto p = Point {rand(), rand()};
+        const auto p = Point{rand(), rand()};
         auto* v = db.insert(p);
         for (int j = 0; j < num_values; ++j)
         {
@@ -256,10 +261,10 @@ BENCHMARK_F(InsertAndFind, Arena, DbFixture, 0, 64)
 
 BENCHMARK_F(InsertAndFind, ArenaSorting, DbFixture, 0, 64)
 {
-    ArenaDb db {num_keys};
+    ArenaDb db{num_keys};
 
     auto const insert = [&]() {
-        const auto p = Point {rand(), rand()};
+        const auto p = Point{rand(), rand()};
         auto* v = db.insert(p);
         for (int j = 0; j < num_values; ++j)
         {
@@ -294,7 +299,7 @@ BASELINE_F(InsertAndSumAll, NaiveMap, DbFixture, 0, 64)
     NaiveDb db;
 
     auto const insert = [&]() {
-        const auto p = Point {rand(), rand()};
+        const auto p = Point{rand(), rand()};
         std::vector<double> v;
         v.reserve(30);
         for (int j = 0; j < num_values; ++j)
@@ -326,10 +331,10 @@ BASELINE_F(InsertAndSumAll, NaiveMap, DbFixture, 0, 64)
 
 BENCHMARK_F(InsertAndSumAll, Arena, DbFixture, 0, 64)
 {
-    ArenaDb db {num_keys};
+    ArenaDb db{num_keys};
 
     auto const insert = [&]() {
-        const auto p = Point {rand(), rand()};
+        const auto p = Point{rand(), rand()};
         auto* v = db.insert(p);
         for (int j = 0; j < num_values; ++j)
         {
@@ -359,10 +364,10 @@ BENCHMARK_F(InsertAndSumAll, Arena, DbFixture, 0, 64)
 
 BENCHMARK_F(InsertAndSumAll, ArenaSorted, DbFixture, 0, 64)
 {
-    ArenaDb db {num_keys};
+    ArenaDb db{num_keys};
 
     auto const insert = [&]() {
-        const auto p = Point {rand(), rand()};
+        const auto p = Point{rand(), rand()};
         auto* v = db.insert(p);
         for (int j = 0; j < num_values; ++j)
         {
@@ -390,3 +395,4 @@ BENCHMARK_F(InsertAndSumAll, ArenaSorted, DbFixture, 0, 64)
 
     celero::DoNotOptimizeAway(sum);
 }
+

@@ -51,7 +51,8 @@ private:
 /// Ctor takes a pointer to a buffer of size capacity
 /// !!Important!! this object does not manage memory.
 /// Be sure not to leak the buffer passed to the vector!
-template <typename T> class FixedLenView final
+template <typename T>
+class FixedLenView final
 {
     T* ptr;
     size_t capacity;
@@ -169,7 +170,8 @@ public:
     }
 };
 
-template <typename T1, typename T2> class JoinIterator
+template <typename T1, typename T2>
+class JoinIterator
 {
     T1* a;
     T2* b;

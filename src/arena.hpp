@@ -12,7 +12,7 @@ class ArenaAllocator final
     char* _next;
 
     // ArenaAllocator is a linked list
-    std::unique_ptr<ArenaAllocator> _next_arena = nullptr;
+    ArenaAllocator* _next_arena = nullptr;
 
 public:
     ArenaAllocator(ArenaAllocator const&) = delete;
@@ -26,13 +26,16 @@ public:
     ~ArenaAllocator()
     {
         delete[] _start;
+        delete _next_arena;
     }
 
-    ArenaAllocator(ArenaAllocator&& a) noexcept : _start(a._start), _end(a._end), _next(a._next)
+    ArenaAllocator(ArenaAllocator&& a) noexcept
+        : _start(a._start), _end(a._end), _next(a._next), _next_arena(a._next_arena)
     {
         a._start = nullptr;
         a._end = nullptr;
         a._next = nullptr;
+        a._next_arena = nullptr;
     }
 
     ArenaAllocator& operator=(ArenaAllocator&& a) noexcept
@@ -40,34 +43,33 @@ public:
         _start = a._start;
         _end = a._end;
         _next = a._next;
+        _next_arena = a._next_arena;
         a._start = nullptr;
         a._end = nullptr;
         a._next = nullptr;
+        a._next_arena = nullptr;
         return *this;
     }
 
     size_t remaining() const noexcept
     {
+        if (_next > _end)
+            return 0;
         return _end - _next;
     }
 
     /// Allocate space for n items of type T
     /// Throw std::bad_alloc if the Allocator is out of memory
-    template <typename T> T* allocate(const size_t n)
+    template <typename T>
+    T* allocate(const size_t n)
     {
-        const size_t delta = sizeof(T) * n;
-        ArenaAllocator* arena = this;
-        do
-        {
-            if (arena->remaining() < delta)
-            {
-                T* ptr = (T*)arena->_next;
-                arena->_next += delta;
-                return ptr;
-            }
-        } while (arena->_next_arena != nullptr && (arena = arena->_next_arena.get()));
-        arena->_next_arena.reset(new ArenaAllocator(_end - _start));
-		return arena->_next_arena->allocate<T>(n);
+        return allocate_from<T>(this, n);
+    }
+
+    // Make the allocator usable in stl containers
+    void deallocate(void* _p, size_t _n) noexcept
+    {
+        // nope
     }
 
     /// Reset this allocator
@@ -77,6 +79,8 @@ public:
     void clear() noexcept
     {
         _next = _start;
+        if (_next_arena)
+            _next_arena->clear();
     }
 
     bool operator==(ArenaAllocator const& other) const noexcept
@@ -88,11 +92,35 @@ public:
     {
         return _start != other._start;
     }
+
+private:
+    template <typename T>
+    T* allocate_from(ArenaAllocator* arena, const size_t n)
+    {
+        assert(arena != nullptr);
+        const size_t delta = sizeof(T) * n;
+        ArenaAllocator* last = nullptr;
+        do
+        {
+            if (delta <= arena->remaining())
+            {
+                T* ptr = (T*)arena->_next;
+                arena->_next += delta;
+                return ptr;
+            }
+            last = arena;
+            arena = arena->_next_arena;
+        } while (arena != nullptr);
+        const size_t capacity = std::max({size_t(_end - _start), delta});
+        last->_next_arena = new ArenaAllocator{capacity};
+        return allocate_from<T>(last->_next_arena, n);
+    }
 };
 
 /// Typed Arena Allocator to be used in container templates
 /// Takes an ArenaAllocator as a backend
-template <typename T> class TypedArena final
+template <typename T>
+class TypedArena final
 {
     ArenaAllocator* _arena;
 
