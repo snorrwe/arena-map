@@ -8,9 +8,9 @@
 
 class NaiveDb final
 {
-    std::map<Point, std::vector<double>> data;
-
 public:
+    using Map = std::map<Point, std::vector<double>>;
+
     /**
      * Returns nullptr is p is not in the database
      */
@@ -33,6 +33,18 @@ public:
     {
         data.clear();
     }
+
+    Map::iterator begin()
+    {
+        return data.begin();
+    }
+    Map::iterator end()
+    {
+        return data.end();
+    }
+
+private:
+    Map data;
 };
 
 /// Vector with a fix capacity
@@ -157,6 +169,63 @@ public:
     }
 };
 
+template <typename T1, typename T2> class JoinIterator
+{
+    T1* a;
+    T2* b;
+
+public:
+    JoinIterator(T1* a, T2* b) : a(a), b(b)
+    {
+    }
+
+    JoinIterator(JoinIterator const&) = default;
+    JoinIterator& operator=(JoinIterator const&) = default;
+
+    T1& first()
+    {
+        return *a;
+    }
+    T2& second()
+    {
+        return *b;
+    }
+
+    bool operator==(JoinIterator<T1, T2> const& other) const
+    {
+        return a == other.a && b == other.b;
+    }
+
+    bool operator!=(JoinIterator<T1, T2> const& other) const
+    {
+        return !(*this == other);
+    }
+
+    JoinIterator& operator++()
+    {
+        ++a;
+        ++b;
+        return *this;
+    }
+
+    JoinIterator operator++(int)
+    {
+        auto* a = this->a++;
+        auto* b = this->b++;
+        return JoinIterator {a, b};
+    }
+
+    std::pair<T1&, T2&> operator*()
+    {
+        return std::make_pair(*a, *b);
+    }
+
+    JoinIterator<T1, T2>* operator->()
+    {
+        return this;
+    }
+};
+
 class ArenaDb final
 {
 public:
@@ -171,6 +240,16 @@ public:
         , keys {allocator.allocate<Point>(key_capacity), key_capacity}
         , values {allocator.allocate<VecValues>(key_capacity), key_capacity}
     {
+    }
+
+    JoinIterator<Point, VecValues> begin()
+    {
+        return JoinIterator<Point, VecValues> {keys.begin(), values.begin()};
+    }
+
+    JoinIterator<Point, VecValues> end()
+    {
+        return JoinIterator<Point, VecValues> {keys.end(), values.end()};
     }
 
     VecValues const* get(Point const p) const noexcept
